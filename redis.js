@@ -12,8 +12,10 @@ module.exports = {
     await client.sadd(roomName, socketId);
   },
   getRoomMembers: async function(roomName) {
+    data = []
     await client.smembers(roomName, (err, res) => {
-      return res;
+      data =  res;
     });
+    return data;
   },
 }

@@ -35,9 +35,11 @@ module.exports = {
         socket.broadcast.emit('message', message);
       });
 
-      socket.on('create or join', function(room) {
+      socket.on('create or join', async function(room) {
         console.log('Received request to create or join room ' + room);
-        var roomMembers = redis.getRoomMembers(room);
+        var roomMembers = await redis.getRoomMembers(room);
+        console.log(roomMembers)
+        console.log("----------")
         console.log('Room ' + room + ' now has ' + roomMembers + ' client(s)');
         if(roomMembers != null) {
           redis.insertInRoom(room, socket.id);
