@@ -1,5 +1,5 @@
-const redis = require("redis");
-const client = redis.createClient();
+const redis = require("ioredis");
+const client = new redis();
 
 module.exports = {
   saveNewConnection: function(socketId) {
@@ -12,6 +12,8 @@ module.exports = {
     await client.sadd(roomName, socketId);
   },
   getRoomMembers: async function(roomName) {
-    await client.smembers(roomName);
+    await client.smembers(roomName, (err, res) => {
+      return res;
+    });
   },
 }
