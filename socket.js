@@ -2,6 +2,7 @@ var redis = require('./redis');
 
 module.exports = {
   init: function(io) {
+    activeSockets = [];
     io.sockets.on('connection', function(socket) {
       console.log(`New connection id: ${socket.id}`)
       var existingSocket = activeSockets.find(function (existingSocket) { return existingSocket === socket.id; })
