@@ -7,21 +7,20 @@ module.exports = {
       console.log(`New connection, id: ${socket.id}`);
       await redis.saveNewConnection(socket.id);
       var activeConnections = await redis.getAllConnections();
-      console.log(activeConnections)
-      if(activeConnections != null && activeConnections.length != 0) {
-        var notMe = activeConnections.filter(function (existingSocket) { return existingSocket !== socket.id; });
-        console.log(notMe);
-        setTimeout(() => {
-        socket.emit("update-user-list", {
-            users: activeConnections.filter(function (existingSocket) { return existingSocket !== socket.id; })
-        });
-      }, 2000);
-        socket.broadcast.emit("update-user-list", {
-            users: activeConnections
-        });
-      } else {
-        await redis.saveNewConnection(socket.id);
-      }
+      socket.on("get-active-users", function (data) {
+        if(activeConnections != null && activeConnections.length != 0) {
+          var notMe = activeConnections.filter(function (existingSocket) { return existingSocket !== socket.id; });
+          console.log(notMe)
+          socket.emit("add-user-list", {
+              users: notMe
+          });
+        }
+      });
+
+      socket.broadcast.emit("add-user-list", {
+          users: [socket.id]
+      });
+
       socket.on("call-user", function (data) {
         console.log(`making call to ${data.to} from ${socket.id}` )
           socket.to(data.to).emit("call-made", {
@@ -65,6 +64,9 @@ module.exports = {
 
       socket.on('disconnect', async function() {
          console.log('Got disconnect!' + socket.id);
+         socket.broadcast.emit("remove-user-list", {
+             users: [socket.id]
+         });
          redis.removeConnection(socket.id);
       });
     });
