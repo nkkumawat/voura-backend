@@ -2,22 +2,29 @@ const redis = require("ioredis");
 const client = new redis();
 
 module.exports = {
-  saveNewConnection: async function(socketId) {
+  saveNewConnection: async function(socketId, username) {
     client.sadd('connections', socketId);
+    client.hset('all-users', socketId, JSON.stringify({'username': username, 'socketId': socketId}));
   },
   getAllConnections: async function() {
+    var data = [];
+    await client.hgetall('all-users',(err, res) => {
+      data = Object.values(res);
+    });
+    return data;
+  },
+  getSocketRoom: async function(socketId) {
     var data = null;
-    await client.smembers('connections',(err, res) => {
-      data = res;
+    await client.smembers(socketId,(err, res) => {
+      data = res[0]
     });
     return data;
   },
   removeConnection: async function(socketId) {
     await client.srem('connections', socketId);
+    await client.hdel('all-users', socketId);
     await client.smembers(socketId, (err, res) => {
-      console.log(res);
       res.forEach((room) => {
-        console.log(room)
         client.del(room);
       });
     })
@@ -30,11 +37,8 @@ module.exports = {
   getRoomMembers: async function(roomName) {
     var data = null;
     await client.smembers(roomName, (err, res) => {
-      console.log(err)
-      console.log(res)
       data = res;
     });
-    console.log("d", data)
     return data;
   },
 }
